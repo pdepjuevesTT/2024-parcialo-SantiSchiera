@@ -7,33 +7,18 @@ class Persona {
     var property sueldo
     const property meses = [] 
     var mesActual
+    //const property coutasVencidas = [] 
 
     method pasarUnMes() {
         mesActual = mesActual + 1
         self.actualizarDineroDisponible(sueldo)
-        self.pagarCoutasDelMes()
+        meses.get(mesActual).pagarCoutasVencida(self)
+        meses.get(mesActual).pagarCoutasDelMes(self) //lo tiene que hacer alguien mas
         self.actualizarEfectivo(dineroDisponible)
         self.actualizarDineroDisponible(-dineroDisponible)
     }
 
-    method coutasDeEsteMes() = meses.get(mesActual).coutasAPagar()
-
-    method coutaSiguiente() = meses.get(mesActual).coutaSiguiente()
-
-    method coutasParaElMesSiguiente(coutas) {
-        meses.get(mesActual + 1).coutasAPagar().addAll(coutas)
-    }
-
-    method pagarCoutasDelMes() {
-        if(self.coutasDeEsteMes().size() > 0 and dineroDisponible >= self.coutaSiguiente()) 
-        {
-            self.actualizarDineroDisponible(- self.coutaSiguiente())
-            meses.get(mesActual).coutaPaga(self.coutaSiguiente())
-            self.pagarCoutasDelMes()
-        }
-        else {self.coutasParaElMesSiguiente(self.coutasDeEsteMes())}
-    }
-
+    method plataVencida() = meses.get(mesActual).totalDineroVencido() 
 
     method actualizarDineroDisponible(cantidad) {
         dineroDisponible = dineroDisponible + cantidad
@@ -91,31 +76,42 @@ class TarjetaDeDebito {
 
 class TarjetaDeCredito {
     const bancoEmisor 
-    //var costoApagarPorMes
-    const property coutas = [] 
+    var cantidadDeCoutas
+    var contadorDeCoutas
+    var coutas = []
 
-    method agregarCoutaParaPagar(mesSiguiente, couta) {
-        mesSiguiente.coutasAPagar().add(couta)
-    }
+    method agregarCouta(monto) {
+        coutas.add(monto)
+    } //terminar esto
 
-    method precioDeLaCouta(monto) =  monto/bancoEmisor.cantidadCoutas()
+    method precioDeCouta(monto) = monto/cantidadDeCoutas 
 
     method utilizarMedioDePago(persona, monto) {
         if(bancoEmisor.montoMaximo() >= monto) 
         {
-            const precioDeCouta = self.precioDeLaCouta(monto) //acordate del interes
-           self.agregarCoutaParaPagar(persona.meses(), precioDeCouta)//Revisar esto porque tiene que ver con la compra
+            self.agregarCouta(self.precioDeCouta(monto))
+            contadorDeCoutas = contadorDeCoutas + 1
+            if(cantidadDeCoutas > contadorDeCoutas) {self.utilizarMedioDePago(persona, monto)}
         }
     }
+
+}
+
+class TarjetaDeCreditoConBeneficios inherits TarjetaDeCredito {
+    var descuento //porcentaje
+
+    method calcularDescuento(monto) =  (monto/100) * descuento
+
+    override method precioDeCouta(monto) = super(monto) * self.calcularDescuento(monto)
 }
 
 class BancoEmisor {
     var montoMaximo
-    var cantidadDeCoutas
 }
 
 class Mes {
     const property coutasAPagar = []
+    const property coutasVencidas = []
 
     method coutaSiguiente() = coutasAPagar.first()
 
@@ -123,23 +119,29 @@ class Mes {
       coutasAPagar.remove(couta)
     }
 
-/*
-    method pagarCouta(persona) {
-        if(persona.dineroDisponible() >= coutasAPagar.first()) 
+    method pagarCoutasDelMes(persona) {
+        if(coutasAPagar.size() > 0 and persona.dineroDisponible() >= self.coutaSiguiente()) 
         {
-            persona.actualizarDinero(coutasAPagar.first())
-            coutasAPagar.remove(coutasAPagar.first())
-        }
-        else
-        {
-
-        }
+            persona.actualizarDineroDisponible(- self.coutaSiguiente())
+            self.coutaPaga(self.coutaSiguiente())
+            self.pagarCoutasDelMes(persona)
+        }   
+       else {self.coutasVencidas().addAll(coutasAPagar)}
     }
-*/
+
+    method pagarCoutasVencidas(persona) {
+        if(coutasVencidas.size() > 0 and persona.dineroDisponible() >= self.coutaSiguiente()) 
+        {
+            persona.actualizarDineroDisponible(- self.coutaSiguiente())
+            self.coutaPaga(self.coutaSiguiente())
+            self.pagarCoutasVencidas(persona)
+        } 
+    }
+
+    method totalDeDineroVencido() = coutasVencidas.sum() 
 }
 
 class Couta{
-    var cantidadDeCoutas
-    var montoAPagarPorLaCouta
+    var monto
+    var vencida
 }
-
