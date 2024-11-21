@@ -82,10 +82,12 @@ class TarjetaDeCredito {
 
     method agregarCouta(monto) {
         coutas.add(monto)
+        monto.agregarseAlMes(contadorDeCoutas + 1)
+    } 
 
-    } //terminar esto
+    method precioDeCouta(monto) = monto/cantidadDeCoutas + self.calcularInteres(monto)
 
-    method precioDeCouta(monto) = monto/cantidadDeCoutas 
+    method calcularInteres(monto) = monto/100 * bancoEmisor.interes()
 
     method utilizarMedioDePago(persona, monto) {
         if(bancoEmisor.montoMaximo() >= monto) 
@@ -108,6 +110,7 @@ class TarjetaDeCreditoConBeneficios inherits TarjetaDeCredito {
 
 class BancoEmisor {
     var montoMaximo
+    var interes //interprete que el bacno emisor da el interes
 }
 
 class Mes {
@@ -160,6 +163,10 @@ class Mes {
 class Couta{
     var monto
     var vencida
+
+    method agregarseAlMes(mes) {
+        mes.coutasAPagar().add(self)
+    }
 }
 
 class PagadorCompulsivo inherits Persona {
