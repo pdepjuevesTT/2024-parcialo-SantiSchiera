@@ -1,5 +1,5 @@
 class Persona {
-    const property formasDePago = []
+    const property formasDePago = [efectivo]
     var property formaDePagoPreferida
     var dineroDisponible
     var efectivo
@@ -77,11 +77,12 @@ class TarjetaDeDebito {
 class TarjetaDeCredito {
     const bancoEmisor 
     var cantidadDeCoutas
-    var contadorDeCoutas
+    var contadorDeCoutas = 0
     var coutas = []
 
     method agregarCouta(monto) {
         coutas.add(monto)
+
     } //terminar esto
 
     method precioDeCouta(monto) = monto/cantidadDeCoutas 
@@ -138,6 +139,21 @@ class Mes {
         } 
     }
 
+    method pagarCoutaVencidaCuestoLoQueCuesto(persona) {
+        if(coutasVencidas.size() > 0 and persona.dineroDisponible() >= self.coutaSiguiente()) 
+        {
+            persona.actualizarDineroDisponible(- self.coutaSiguiente())
+            self.coutaPaga(self.coutaSiguiente())
+            self.pagarCoutasVencidas(persona)
+        }
+        else {
+            if(coutasVencidas.size() > 0 and persona.efectivo() >= self.coutaSiguiente())
+             {persona.actualizarEfectivo(- self.coutaSiguiente())
+            self.coutaPaga(self.coutaSiguiente())
+            self.pagarCoutasVencidas(persona)}
+            }
+    }
+
     method totalDeDineroVencido() = coutasVencidas.sum() 
 }
 
@@ -145,3 +161,15 @@ class Couta{
     var monto
     var vencida
 }
+
+class PagadorCompulsivo inherits Persona {
+     override method pasarUnMes() {
+        mesActual = mesActual + 1
+        self.actualizarDineroDisponible(sueldo)
+        meses.get(mesActual).pagarCoutaVencidaCuestoLoQueCuesto(self)
+        meses.get(mesActual).pagarCoutasDelMes(self) //lo tiene que hacer alguien mas
+        self.actualizarEfectivo(dineroDisponible)
+        self.actualizarDineroDisponible(-dineroDisponible)
+     }
+}
+
