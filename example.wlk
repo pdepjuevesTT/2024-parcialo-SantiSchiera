@@ -180,3 +180,6 @@ class PagadorCompulsivo inherits Persona {
      }
 }
 
+class CompradorCompulsivo inherits Persona{
+    //No pude
+}
